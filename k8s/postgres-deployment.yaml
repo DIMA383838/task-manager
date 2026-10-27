@@ -1,0 +1,53 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9187"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: taskdb
+            - name: POSTGRES_USER
+              value: taskuser
+            - name: POSTGRES_PASSWORD
+              value: taskpass
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - taskuser
+                - -d
+                - taskdb
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+        - name: postgres-exporter
+          image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+          ports:
+            - containerPort: 9187
+          env:
+            - name: DATA_SOURCE_URI
+              value: "localhost:5432/taskdb?sslmode=disable"
+            - name: DATA_SOURCE_USER
+              value: taskuser
+            - name: DATA_SOURCE_PASS
+              value: taskpass

@@ -1,0 +1,15 @@
+plugins:
+  - victoriametrics-logs-datasource
+
+service:
+  type: NodePort
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        access: proxy
+        url: http://victoria-logs-victoria-logs-single-server.logging.svc.cluster.local:9428
+        isDefault: true
